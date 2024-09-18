@@ -3,15 +3,26 @@ var editor;
 
 // Function to change the theme of the editor based on user selection.
 function changeEditorTheme(newTheme) {
+  console.log(newTheme);
   if (editor) {
     editor.setOption("theme", newTheme);
     localStorage.setItem("editorTheme", newTheme); // Save the selected theme to localStorage.
   }
 }
 
+function openSelect(selectElement) {
+  selectElement.size = 5; // Número de opciones visibles al abrir
+}
+
+// Función para cerrar el select al quitar el ratón
+function closeSelect(selectElement) {
+  selectElement.size = 1; // Restablecer a su tamaño original
+}
+
+
 function changeLanguage() {
   var selectedLang = document.getElementById('language-selector').value;
-
+  console.log(selectedLang);
   // Llamada AJAX para cambiar el idioma en Moodle
   jQuery.ajax({
       url: M.cfg.wwwroot + '/mod/sqlab/change_language.php',

@@ -4,6 +4,8 @@
 require_once dirname(__FILE__) . '/../../config.php';
 require_once dirname(__FILE__) . '/lib.php';
 use mod_sqlab\schema_manager;
+include 'snippets.php';
+
 
 try {
 
@@ -260,29 +262,155 @@ echo ' <div class="ablock">';
 echo ' <label for="myCodeMirror"></label>';
 echo ' <div class="code-editor-container">';
 
-// Theme selector for CodeMirror.
-echo '<select id="themeSelector"><option value="" disabled selected>' . get_string('editorthemes', 'sqlab') . '</option>';
+
+//Nav Bar
+echo '<div class="navbar-container">';
+echo '<nav class="navbar navbar-expand-lg navbar-light bg-light">';
+echo '<div class="collapse navbar-collapse" id="navbarNav">';
+echo '<ul class="navbar-nav ml-auto">';
+
+echo '<li class="nav-item">';
+echo '<a class="nav-link" href="#"><i class="fas fa-tools"></i> ' . get_string('navbar_tools', 'sqlab') . '</a>';
+echo '</li>';
+
+echo '<li class="nav-item dropdown">';
+echo '<a class="nav-link dropdown-toggle" href="#" id="snippetsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+echo '<i class="fas fa-code"></i> ' . get_string('navbar_snippets', 'sqlab') . '</a>';
+echo '<div class="dropdown-menu" aria-labelledby="snippetsDropdown">';
+
+// Generar el menú de snippets
+foreach ($snippets as $snippetName => $snippetCode) {
+    // Añadir un evento onclick que evita el comportamiento por defecto
+    echo '<a class="dropdown-item" href="#" onclick="insertSnippet(event, `' . addslashes($snippetCode) . '`)">' . $snippetName . '</a>';
+}
+
+echo '</div>';
+echo '</li>';
+
+echo '<script>
+    // Función para insertar el snippet en el editor de CodeMirror
+    function insertSnippet(event, snippetCode) {
+        event.preventDefault(); // Evita que la página haga scroll hacia arriba
+        
+        var editor = document.querySelector(".CodeMirror").CodeMirror; // Obtenemos el editor de CodeMirror
+        if (editor) {
+            // Insertar el snippet en la posición actual del cursor
+            editor.replaceSelection(snippetCode);
+        }
+    }
+</script>';
+
+
+
+echo '<li class="nav-item dropdown">';
+echo '<a class="nav-link dropdown-toggle" href="#" id="settingsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+echo '<i class="fas fa-cog"></i> ' . get_string('navbar_conf', 'sqlab') . '</a>';
+echo '<div class="dropdown-menu" aria-labelledby="settingsDropdown">';
+
+echo '<div class="dropdown-item">';
+echo '<a class="dropdown-item" href="#">' . get_string('editorthemes', 'sqlab') . '</a>';
+echo '<select id="themeSelector" class="form-control" onmouseover="openSelect(this)" onmouseout="closeSelect(this)" onchange="changeEditorTheme(this.value)">';
+echo '<option value="" disabled selected>' . get_string('editorthemes', 'sqlab') . '</option>';
 foreach ($themes as $theme) {
     echo '<option value="' . $theme . '">' . $theme . '</option>';
 }
-echo ' </select>';
+echo '</select>';
 
+echo '<script>
+    // Función para abrir el select al pasar el ratón
+    function openSelect(selectElement) {
+        selectElement.size = 5; // Número de opciones visibles al abrir
+    }
+
+    // Función para cerrar el select al quitar el ratón
+    function closeSelect(selectElement) {
+        selectElement.size = 1; // Restablecer a su tamaño original
+    }
+
+    // Función para cambiar el tema del editor
+    function changeEditorTheme(theme) {
+        console.log("Cambiando tema del editor a: " + theme);
+        // Lógica para cambiar el tema de CodeMirror o el editor que estés usando
+        var editor = document.querySelector(".CodeMirror");
+        if (editor) {
+            // Supón que tienes una lógica para aplicar el tema
+            editor.setOption("theme", theme);
+        }
+    }
+</script>';
+echo '</div>';
+
+echo '<div class="dropdown-item">';
+echo '<a class="dropdown-item" href="#">' . get_string('fontsize', 'sqlab') . '</a>';
 // Font size selector for CodeMirror.
-echo ' <select id="fontSizeSelector" onchange="changeFontSize(this.value)">';
+echo ' <select id="fontSizeSelector" onmouseover="openSelect(this)" onmouseout="closeSelect(this)" onchange="changeFontSize(this.value)">';
 echo ' <option value="" disabled selected>' . get_string('fontsize', 'sqlab') . '</option>';
 for ($i = 10; $i <= 30; $i += 2) {
     echo ' <option value="' . $i . 'px">' . $i . '</option>';
 }
 echo ' </select>';
+echo '<script>
+    // Función para abrir el select al pasar el ratón
+    function openSelect(selectElement) {
+        selectElement.size = 5; // Número de opciones visibles al abrir
+    }
 
+    // Función para cerrar el select al quitar el ratón
+    function closeSelect(selectElement) {
+        selectElement.size = 1; // Restablecer a su tamaño original
+    }
+
+    // Función para cambiar el tema del editor
+    function changeFontSize(size) {
+    if (editor) {
+        editor.getWrapperElement().style.fontSize = size;
+        editor.refresh();
+        localStorage.setItem("editorFontSize", size); // Save the new font size to localStorage.
+    }
+}
+</script>';
+echo '</div>';
+
+
+echo '<div class="dropdown-item">';
+echo '<a class="dropdown-item" href="#">' . get_string('selectlanguage', 'sqlab') . '</a>';
 // Language selector to switch between available languages.
 $languages = get_string_manager()->get_list_of_translations();  // Obtiene los idiomas disponibles en Moodle
-echo ' <select id="language-selector" onchange="changeLanguage()">';
+echo ' <select id="language-selector" onmouseover="openSelect(this)" onmouseout="closeSelect(this)" onchange="changeLanguage()">';
 echo '<option value="" disabled selected>' . get_string('selectlanguage', 'sqlab') . '</option>';
 foreach ($languages as $langcode => $langname) {
     echo '<option value="' . $langcode . '">' . $langname . '</option>';
 }
 echo ' </select>';
+echo '<script>
+    // Función para abrir el select al pasar el ratón
+    function openSelect(selectElement) {
+        selectElement.size = 3; // Número de opciones visibles al abrir
+    }
+
+    // Función para cerrar el select al quitar el ratón
+    function closeSelect(selectElement) {
+        selectElement.size = 1; // Restablecer a su tamaño original
+    }
+</script>';
+
+echo '</div>';
+
+echo '</div>';
+echo '</li>';
+
+
+echo '<li class="nav-item">';
+echo '<a class="nav-link" href="#"><i class="fas fa-question-circle"></i> ' . get_string('navbar_help', 'sqlab') . '</a>';
+echo '</li>';
+
+
+    
+echo '</ul>';
+echo '</div>';
+echo '</nav>';
+echo '</div>';
+
 
 // CodeMirror editor.
 echo ' <textarea id="myCodeMirror" class="form-control" data-question-id="' . $question_id . '"></textarea>';
@@ -365,6 +493,7 @@ echo '<script src="' . new moodle_url('/mod/sqlab/js/accordion_display.js') . '"
 echo '<script src="' . new moodle_url('/mod/sqlab/js/grade_manager.js') . '"></script>';
 echo '<script src="' . new moodle_url('/mod/sqlab/js/context_resultdata_executor.js') . '"></script>';
 echo '<script src="' . new moodle_url('/mod/sqlab/js/info_button.js') . '"></script>';
+
 
 // Display the Moodle page footer.
 echo $OUTPUT->footer();

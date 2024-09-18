@@ -137,3 +137,7 @@ $string['all_rows_correct_feedback'] = 'Todas las filas son correctas.';
 $string['no_response_feedback'] = 'No se ha proporcionado una respuesta.';
 
 $string['selectlanguage'] = 'Idioma';
+$string['navbar_help'] = 'Ayuda';
+$string['navbar_tools'] = 'Herramientas';
+$string['navbar_conf'] = 'Configuración';
+$string['navbar_snippets'] = 'Snippets';

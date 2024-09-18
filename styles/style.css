@@ -15,7 +15,8 @@
 }
 
 #themeSelector,
-#fontSizeSelector {
+#fontSizeSelector,
+#language-selector {
   border: 1px solid #8f959e;
   border-radius: 8px;
   margin-bottom: 10px;
