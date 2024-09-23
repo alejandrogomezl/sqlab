@@ -1,20 +1,19 @@
 <?php
 
-// Load the necessary configuration, library files and namespaces.
+// Cargar la configuración necesaria, archivos de librería y namespaces.
 require_once dirname(__FILE__) . '/../../config.php';
 require_once dirname(__FILE__) . '/lib.php';
 use mod_sqlab\schema_manager;
-include 'snippets.php';
-
+include 'snippets.php'; // Incluir archivo con los snippets.
 
 try {
 
-    // Fetch and validate necessary parameters from the request.
+    // Obtener y validar los parámetros necesarios desde la solicitud (request).
     $cmid = optional_param('cmid', null, PARAM_INT);
     $attemptid = optional_param('attempt', null, PARAM_INT);
     $page = optional_param('page', 0, PARAM_INT);
 
-    // Validate course module and additional data.
+    // Validar módulo del curso y datos adicionales.
     if ($cmid === null) {
         throw new moodle_exception('nocmid', 'sqlab');
     }
@@ -29,15 +28,15 @@ try {
         throw new moodle_exception('invalidcourseid', 'sqlab');
     }
 
-    // Check for the existence of the attempt ID.
+    // Verificar si existe el ID del intento.
     if ($attemptid === null) {
         throw new moodle_exception('noattemptid', 'sqlab');
     }
 
-    // Get attempt from database.
+    // Obtener intento desde la base de datos.
     $attempt = $DB->get_record('sqlab_attempts', array('id' => $attemptid), '*', IGNORE_MISSING);
 
-    // Check attempt ownership and existence.
+    // Verificar propiedad y existencia del intento.
     if (!$attempt) {
         throw new moodle_exception('invalidattemptid', 'sqlab');
     }
@@ -46,7 +45,7 @@ try {
         throw new moodle_exception('notyourattempt', 'sqlab');
     }
 
-    // Get and check the existence of the SQLab instance.
+    // Obtener y verificar la existencia de la instancia de SQLab.
     $sqlab = $DB->get_record('sqlab', array('id' => $cm->instance), '*', IGNORE_MISSING);
     if (!$sqlab) {
         throw new moodle_exception('invalidsqlabid', 'sqlab');
@@ -54,190 +53,251 @@ try {
 
 } catch (moodle_exception $e) {
 
-    // Define the redirect URL based on the exception and available data.
+    // Redirigir según la excepción y los datos disponibles.
     if ($e->errorcode === 'invalidcoursemodule' && $cmid !== null) {
         $redirectUrl = new moodle_url('/my/');
     } else if ($e->errorcode === 'invalidsqlabid') {
         $redirectUrl = new moodle_url('/my/');
     } else {
         if (!empty($cmid)) {
-            $redirectUrl = new moodle_url('/mod/sqlab/view.php', ['id' => $cmid]);  // Redirect to the module's view page if cmid is available and valid.
+            $redirectUrl = new moodle_url('/mod/sqlab/view.php', ['id' => $cmid]); // Redirigir a la página del módulo si el cmid es válido.
         } else {
             $redirectUrl = (!empty($course->id)) ? new moodle_url('/course/view.php', ['id' => $course->id]) : new moodle_url('/my/');
         }
     }
 
+    // Mostrar error y redirigir.
     \core\notification::error(get_string($e->errorcode, $e->module));
     redirect($redirectUrl);
     exit;
-
 }
 
-// Enforce user login, course module context and check capabilities.
+// Forzar inicio de sesión del usuario y verificar capacidades.
 $context = context_module::instance($cm->id);
 require_login($course, true, $cm);
 require_capability('mod/sqlab:attempt', $context);
 
-// Configure the page settings.
+// Configurar los parámetros de la página.
 $PAGE->set_url('/mod/sqlab/attempt.php', array('attempt' => $attemptid, 'cmid' => $cmid, 'page' => $page));
 $PAGE->set_title(format_string($sqlab->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
 $formatoptions = new stdClass;
-$formatoptions->noclean = true; // This allows the HTML not to be cleaned up.
-$formatoptions->overflowdiv = true; // This ensures that long content is handled correctly.
-$formatoptions->context = $context; // The current context for applying appropriate permissions.
-$formatoptions->filter = false; // Disables filter processing for this call.
+$formatoptions->noclean = true; // Permitir que el HTML no sea limpiado.
+$formatoptions->overflowdiv = true; // Asegura que el contenido largo se maneje correctamente.
+$formatoptions->context = $context; // Contexto actual para aplicar los permisos apropiados.
+$formatoptions->filter = false; // Desactivar procesamiento de filtros para esta llamada.
 
-// Linking SQLab specific stylesheet.
+// Enlace al archivo CSS específico de SQLab.
 $PAGE->requires->css(new moodle_url('/mod/sqlab/styles/style.css'));
 
-// Loading core CodeMirror JS from CDN.
+// Cargar el JS de CodeMirror desde CDN.
 $PAGE->requires->js(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js'), true);
 
-// Linking core CodeMirror CSS from CDN.
+// Cargar el CSS de CodeMirror desde CDN.
 $PAGE->requires->css(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css'));
 
-// Loading PostgreSQL mode for CodeMirror from CDN.
+// Cargar el modo PostgreSQL para CodeMirror desde CDN.
 $PAGE->requires->js(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/sql/sql.min.js'), true);
 
-// List of CodeMirror themes to be included.
+// Lista de temas de CodeMirror.
 $themes = [
-    '3024-day',
-    '3024-night',
-    'abbott',
-    'abcdef',
-    'ambiance',
-    'ayu-dark',
-    'ayu-mirage',
-    'base16-dark',
-    'base16-light',
-    'bespin',
-    'blackboard',
-    'cobalt',
-    'colorforth',
-    'darcula',
-    'dracula',
-    'duotone-dark',
-    'duotone-light',
-    'eclipse',
-    'elegant',
-    'erlang-dark',
-    'gruvbox-dark',
-    'hopscotch',
-    'icecoder',
-    'idea',
-    'isotope',
-    'lesser-dark',
-    'liquibyte',
-    'lucario',
-    'material',
-    'material-darker',
-    'material-palenight',
-    'material-ocean',
-    'mbo',
-    'mdn-like',
-    'midnight',
-    'monokai',
-    'moxer',
-    'neat',
-    'neo',
-    'night',
-    'nord',
-    'oceanic-next',
-    'panda-syntax',
-    'paraiso-dark',
-    'paraiso-light',
-    'pastel-on-dark',
-    'railscasts',
-    'rubyblue',
-    'seti',
-    'shadowfox',
-    'solarized',
-    'ssms',
-    'the-matrix',
-    'tomorrow-night-bright',
-    'tomorrow-night-eighties',
-    'ttcn',
-    'twilight',
-    'vibrant-ink',
-    'xq-dark',
-    'xq-light',
-    'yeti',
-    'yonce',
-    'zenburn'
+    '3024-day', '3024-night', 'abbott', 'abcdef', 'ambiance', 'ayu-dark', 'ayu-mirage', 
+    'base16-dark', 'base16-light', 'bespin', 'blackboard', 'cobalt', 'colorforth', 
+    'darcula', 'dracula', 'duotone-dark', 'duotone-light', 'eclipse', 'elegant', 
+    'erlang-dark', 'gruvbox-dark', 'hopscotch', 'icecoder', 'idea', 'isotope', 
+    'lesser-dark', 'liquibyte', 'lucario', 'material', 'material-darker', 
+    'material-palenight', 'material-ocean', 'mbo', 'mdn-like', 'midnight', 'monokai', 
+    'moxer', 'neat', 'neo', 'night', 'nord', 'oceanic-next', 'panda-syntax', 
+    'paraiso-dark', 'paraiso-light', 'pastel-on-dark', 'railscasts', 'rubyblue', 
+    'seti', 'shadowfox', 'solarized', 'ssms', 'the-matrix', 'tomorrow-night-bright', 
+    'tomorrow-night-eighties', 'ttcn', 'twilight', 'vibrant-ink', 'xq-dark', 'xq-light', 
+    'yeti', 'yonce', 'zenburn'
 ];
 
-// Loop through themes and link each CSS file from CDN.
+// Enlazar cada archivo CSS de tema de CodeMirror desde CDN.
 foreach ($themes as $theme) {
     $PAGE->requires->css(new moodle_url("https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/theme/$theme.min.css"));
 }
 
-// Include CodeMirror CSS and JS for fullscreen mode.
+// Incluir CSS y JS de CodeMirror para el modo de pantalla completa.
 $PAGE->requires->css(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/display/fullscreen.min.css'));
 $PAGE->requires->js(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/display/fullscreen.min.js'), true);
 
-// Include CodeMirror CSS and JS for hints.
+// Incluir CSS y JS de CodeMirror para las sugerencias (hints).
 $PAGE->requires->js(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/hint/anyword-hint.min.js'), true);
 $PAGE->requires->css(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/hint/show-hint.min.css'));
 $PAGE->requires->js(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/hint/show-hint.min.js'), true);
 $PAGE->requires->js(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/hint/sql-hint.min.js'), true);
 
-// Include CodeMirror JS for bracket matching features.
+// Incluir JS de CodeMirror para el emparejamiento de corchetes.
 $PAGE->requires->js(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/edit/matchbrackets.min.js'), true);
 
-// Include CodeMirror JS for automatic bracket closing.
+// Incluir JS de CodeMirror para el cierre automático de corchetes.
 $PAGE->requires->js(new moodle_url('https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/edit/closebrackets.min.js'), true);
 
-// Retrieve the list of quiz questions from the database (SQL Question/s).
+// Obtener la lista de preguntas del quiz desde la base de datos (pregunta SQL).
 $quiz_questions = sqlab_get_quiz_questions($sqlab->quizid);
 
-// Redirection and error notification if no questions are found.
+// Redirigir y mostrar notificación de error si no se encuentran preguntas.
 if (empty($quiz_questions)) {
     \core\notification::error(get_string('noquestionsfound', 'sqlab'));
     redirect(new moodle_url('/mod/sqlab/view.php', ['id' => $cmid]));
     exit;
 }
 
-// Validate and adjust the current page number.
+// Validar y ajustar el número de página actual.
 $page = max(0, min($page, count($quiz_questions) - 1));
 
-// Display the Moodle page header.
+// Mostrar el encabezado de la página de Moodle.
 echo $OUTPUT->header();
 
-// Fetch and display the current question.
+// Obtener y mostrar la pregunta actual.
 $current_question = $quiz_questions[$page];
 $question_id = 'question-' . $current_question['questionid'];
 
-// Format the question grade to two decimal places.
+// Formatear la calificación de la pregunta a dos decimales.
 $formatted_grade = number_format((float) $current_question['questiongrade'], 2);
 
-// Start of div wrapper to set flex display.
+// Iniciar un contenedor div con estilo flex.
 echo ' <div style="display: flex;">';
 
-// Start of main content div.
-echo ' <div style="flex: 1; padding-right: 15px;">';
+// Crear barra de navegación vertical con íconos
+// Barra de navegación vertical con las mismas funciones que la barra horizontal
+echo '
+<div class="vertical-navbar" style="width: 50px; background-color: #f8f9fa; display: flex; flex-direction: column; align-items: center; padding: 10px 0;">
+    
+    <!-- Icono de herramientas (igual que el botón de herramientas de la barra horizontal) -->
+    <a href="#" style="margin: 20px 0;" onclick="openTools()"><i class="fas fa-tools"></i></a>
+    
+    <!-- Icono de snippets con menú desplegable -->
+    <a href="#" style="margin: 20px 0;" id="snippetsDropdownToggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-code"></i></a>
+    <div class="dropdown-menu" id="snippetsDropdownMenu" aria-labelledby="snippetsDropdownToggle">';
+    // Generar el menú de snippets
+    foreach ($snippets as $snippetName => $snippetCode) {
+        echo '<a class="dropdown-item" href="#" onclick="insertSnippet(event, `' . addslashes($snippetCode) . '`)">' . $snippetName . '</a>';
+    }
+echo '
+    </div>
+    
+    <!-- Icono de configuración (igual que el botón de configuración de la barra horizontal) -->
+    <a href="#" style="margin: 20px 0;" id="settingsDropdownToggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i></a>
+    <div class="dropdown-menu" id="settingsDropdownMenu" aria-labelledby="settingsDropdownToggle">
+        <!-- Selector de temas -->
+        <div class="dropdown-item">
+            <label>' . get_string('editorthemes', 'sqlab') . '</label>
+            <select id="themeSelector" class="form-control" onchange="changeEditorTheme(this.value)">';
+            foreach ($themes as $theme) {
+                echo '<option value="' . $theme . '">' . $theme . '</option>';
+            }
+echo '      </select>
+        </div>
+        <!-- Selector de tamaño de fuente -->
+        <div class="dropdown-item">
+            <label>' . get_string('fontsize', 'sqlab') . '</label>
+            <select id="fontSizeSelector" class="form-control" onchange="changeFontSize(this.value)">';
+            for ($i = 10; $i <= 30; $i += 2) {
+                echo '<option value="' . $i . 'px">' . $i . '</option>';
+            }
+echo '      </select>
+        </div>
+        <!-- Selector de idioma -->
+        <div class="dropdown-item">
+            <label>' . get_string('selectlanguage', 'sqlab') . '</label>
+            <select id="languageSelector" class="form-control" onchange="changeLanguage()">';
+            foreach ($languages as $langcode => $langname) {
+                echo '<option value="' . $langcode . '">' . $langname . '</option>';
+            }
+echo '      </select>
+        </div>
+    </div>
 
-// Start of the div for the main question with its unique ID.
+    <!-- Icono de ayuda -->
+    <a href="#" style="margin: 20px 0;" onclick="openHelp()"><i class="fas fa-question-circle"></i></a>
+    
+</div>
+
+<!-- JavaScript Functions -->
+<script>
+    // Función para abrir las herramientas
+    function openTools() {
+        console.log("Herramientas abiertas");
+    }
+
+    // Función para insertar snippet
+    function insertSnippet(event, snippetCode) {
+        event.preventDefault();
+        var editor = document.querySelector(".CodeMirror").CodeMirror;
+        if (editor) {
+            editor.replaceSelection(snippetCode);
+        }
+    }
+
+    // Función para cambiar el tema del editor
+    function changeEditorTheme(theme) {
+        var editor = document.querySelector(".CodeMirror").CodeMirror;
+        if (editor) {
+            editor.setOption("theme", theme);
+        }
+    }
+
+    // Función para cambiar el tamaño de fuente
+    function changeFontSize(size) {
+        var editor = document.querySelector(".CodeMirror").CodeMirror;
+        if (editor) {
+            editor.getWrapperElement().style.fontSize = size;
+            editor.refresh();
+        }
+    }
+
+    // Función para cambiar el idioma
+    function changeLanguage() {
+        var selectedLanguage = document.getElementById("languageSelector").value;
+        console.log("Idioma cambiado a: " + selectedLanguage);
+    }
+
+    // Función para abrir ayuda
+    function openHelp() {
+        console.log("Ayuda abierta");
+    }
+
+    // Mostrar/ocultar los menús desplegables de manera independiente
+    document.getElementById("snippetsDropdownToggle").addEventListener("click", function() {
+        document.getElementById("snippetsDropdownMenu").classList.toggle("show");
+        document.getElementById("settingsDropdownMenu").classList.remove("show"); // Asegurarse de que solo uno esté abierto
+    });
+
+    document.getElementById("settingsDropdownToggle").addEventListener("click", function() {
+        document.getElementById("settingsDropdownMenu").classList.toggle("show");
+        document.getElementById("snippetsDropdownMenu").classList.remove("show"); // Asegurarse de que solo uno esté abierto
+    });
+
+</script>
+';
+
+// Inicio del div de contenido principal.
+echo ' <div style="flex: 1; padding-left: 70px;">';
+
+// Inicio del div para la pregunta principal con su ID único.
 echo ' <div id="' . $question_id . '" class="que shortanswer deferredfeedback notyetanswered">';
 
-// Question information section.
+// Sección de información de la pregunta (número y calificación).
 echo ' <div class="info">';
-echo ' <h3 class="no">' . get_string('question', 'sqlab') . ' <span class="qno">' . ($page + 1) . '</span></h3>'; // Display the question number.
-echo ' <div class="grade">' . get_string('scoresas', 'sqlab') . ' ' . $formatted_grade . '</div>'; // Display the formatted grade.
+echo ' <h3 class="no">' . get_string('question', 'sqlab') . ' <span class="qno">' . ($page + 1) . '</span></h3>'; // Mostrar el número de la pregunta.
+echo ' <div class="grade">' . get_string('scoresas', 'sqlab') . ' ' . $formatted_grade . '</div>'; // Mostrar la calificación formateada.
 echo ' </div>';
 
-// Start of question content section.
+// Inicio de la sección de contenido de la pregunta.
 echo ' <div class="content">';
 
-// Start of question formulation section.
+// Inicio de la sección de formulación de la pregunta.
 echo ' <div class="formulation clearfix">';
 
-// Display the statement.
+// Mostrar la declaración de la pregunta.
 echo format_text($current_question['statement'], FORMAT_MOODLE, $formatoptions);
 
-// Accordion sections for SQL results, related concepts, and hints.
+// Secciones de acordeón para resultados SQL, conceptos relacionados y sugerencias.
 echo ' <div class="accordion-container">';
 echo ' <h2 class="accordion-title">' . get_string('sqlresults', 'sqlab') . '</h2>';
 echo ' <div class="accordion-content">';
@@ -245,239 +305,133 @@ echo " <div id='resultDataContainer' class='sql-query-results'></div>";
 echo ' </div>';
 echo ' </div>';
 
-$formatoptions->filter = true; // Activate all filters for this section.
+$formatoptions->filter = true; // Activar filtros para esta sección.
 echo ' <div class="accordion-container">';
 echo ' <h2 class="accordion-title">' . get_string('relatedconcepts', 'sqlab') . '</h2>';
 echo ' <div class="accordion-content">' . format_text($current_question['relatedconcepts'], FORMAT_HTML, $formatoptions) . '</div>';
 echo ' </div>';
-$formatoptions->filter = false; // Resets the filter processing for other sections.
+$formatoptions->filter = false; // Restablecer el procesamiento de filtros para otras secciones.
 
 echo ' <div class="accordion-container">';
 echo ' <h2 class="accordion-title">' . get_string('hints', 'sqlab') . '</h2>';
 echo ' <div class="accordion-content">' . format_text($current_question['code'], FORMAT_HTML, $formatoptions) . '</div>';
 echo ' </div>';
 
-// CodeMirror editor setup.
+// Configuración del editor CodeMirror.
 echo ' <div class="ablock">';
 echo ' <label for="myCodeMirror"></label>';
 echo ' <div class="code-editor-container">';
 
+// Barra de navegación para herramientas, snippets, configuración y ayuda.
+echo "
+<div class='navbar-container'>
+    <nav class='navbar navbar-expand-lg navbar-light bg-light'>
+        <div class='collapse navbar-collapse' id='navbarNav'>
+            <ul class='navbar-nav ml-auto'>";
 
-//Nav Bar
-echo '<div class="navbar-container">';
-echo '<nav class="navbar navbar-expand-lg navbar-light bg-light">';
-echo '<div class="collapse navbar-collapse" id="navbarNav">';
-echo '<ul class="navbar-nav ml-auto">';
+                // Elemento de la barra de navegación: Herramientas
+                echo "
+                <li class='nav-item'>
+                    <a class='nav-link' href='#'><i class='fas fa-tools'></i> " . get_string('navbarTools', 'sqlab') . "</a>
+                </li>";
 
-echo '<li class="nav-item">';
-echo '<a class="nav-link" href="#"><i class="fas fa-tools"></i> ' . get_string('navbar_tools', 'sqlab') . '</a>';
-echo '</li>';
+                // Menú desplegable: Snippets
+                echo "
+                <li class='nav-item dropdown'>
+                    <a class='nav-link dropdown-toggle' href='#' id='snippetsDropdown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
+                        <i class='fas fa-code'></i> " . get_string('navbar_snippets', 'sqlab') . "
+                    </a>
+                    <div class='dropdown-menu' aria-labelledby='snippetsDropdown'>";
+                    
+                    // Recorrer los snippets y generar opciones en el menú desplegable
+                    foreach ($snippets as $snippetName => $snippetCode) {
+                        echo "<a class='dropdown-item' href='#' onclick='insertSnippet(event, `" . addslashes($snippetCode) . "`)'>" . $snippetName . "</a>";
+                    }
+                    
+                echo "
+                    </div>
+                </li>";
 
-echo '<li class="nav-item dropdown">';
-echo '<a class="nav-link dropdown-toggle" href="#" id="snippetsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
-echo '<i class="fas fa-code"></i> ' . get_string('navbar_snippets', 'sqlab') . '</a>';
-echo '<div class="dropdown-menu" aria-labelledby="snippetsDropdown">';
+                // Menú desplegable: Configuración (temas, tamaño de fuente, idioma)
+                echo "
+                <li class='nav-item dropdown'>
+                    <a class='nav-link dropdown-toggle' href='#' id='settingsDropdown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
+                        <i class='fas fa-cog'></i> " . get_string('navbar_conf', 'sqlab') . "
+                    </a>
+                    <div class='dropdown-menu' aria-labelledby='settingsDropdown'>
+                    
+                        <!-- Selección de temas para el editor -->
+                        <div class='dropdown-item'>
+                            <a class='dropdown-item' href='#'>" . get_string('editorthemes', 'sqlab') . "</a>
+                            <select id='themeSelector' class='form-control' onmouseover='openSelect(this)' onmouseout='closeSelect(this)' onchange='changeEditorTheme(this.value)'>
+                                <option value='' disabled selected>" . get_string('editorthemes', 'sqlab') . "</option>";
+                                foreach ($themes as $theme) {
+                                    echo "<option value='" . $theme . "'>" . $theme . "</option>";
+                                }
+                echo "
+                            </select>
+                        </div>
 
-// Generar el menú de snippets
-foreach ($snippets as $snippetName => $snippetCode) {
-    // Añadir un evento onclick que evita el comportamiento por defecto
-    echo '<a class="dropdown-item" href="#" onclick="insertSnippet(event, `' . addslashes($snippetCode) . '`)">' . $snippetName . '</a>';
-}
+                        <!-- Selector para cambiar el tamaño de fuente -->
+                        <div class='dropdown-item'>
+                            <a class='dropdown-item' href='#'>" . get_string('fontsize', 'sqlab') . "</a>
+                            <select id='fontSizeSelector' onmouseover='openSelect(this)' onmouseout='closeSelect(this)' onchange='changeFontSize(this.value)'>
+                                <option value='' disabled selected>" . get_string('fontsize', 'sqlab') . "</option>";
+                                for ($i = 10; $i <= 30; $i += 2) {
+                                    echo "<option value='" . $i . "px'>" . $i . "</option>";
+                                }
+                echo "
+                            </select>
+                        </div>
 
-echo '</div>';
-echo '</li>';
+                        <!-- Selector de idioma -->
+                        <div class='dropdown-item'>
+                            <a class='dropdown-item' href='#'>" . get_string('selectlanguage', 'sqlab') . "</a>
+                            <select id='language-selector' onmouseover='openSelect(this)' onmouseout='closeSelect(this)' onchange='changeLanguage()'>
+                                <option value='' disabled selected>" . get_string('selectlanguage', 'sqlab') . "</option>";
+                                foreach ($languages as $langcode => $langname) {
+                                    echo "<option value='" . $langcode . "'>" . $langname . "</option>";
+                                }
+                echo "
+                            </select>
+                        </div>
+                    </div>
+                </li>";
 
-echo '<script>
-    // Función para insertar el snippet en el editor de CodeMirror
-    function insertSnippet(event, snippetCode) {
-        event.preventDefault(); // Evita que la página haga scroll hacia arriba
-        
-        var editor = document.querySelector(".CodeMirror").CodeMirror; // Obtenemos el editor de CodeMirror
-        if (editor) {
-            // Insertar el snippet en la posición actual del cursor
-            editor.replaceSelection(snippetCode);
-        }
-    }
-</script>';
+                // Elemento de ayuda en la barra de navegación
+                echo "
+                <li class='nav-item'>
+                    <a class='nav-link' href='#'><i class='fas fa-question-circle'></i> " . get_string('navbar_help', 'sqlab') . "</a>
+                </li>";
 
+            echo "
+            </ul>
+        </div>
+    </nav>
+</div>";
 
+// Editor de CodeMirror
+echo "
+<div class='code-editor-container'>
+    <textarea id='myCodeMirror' class='form-control' data-question-id='" . $question_id . "'></textarea>
+</div>";
 
-echo '<li class="nav-item dropdown">';
-echo '<a class="nav-link dropdown-toggle" href="#" id="settingsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
-echo '<i class="fas fa-cog"></i> ' . get_string('navbar_conf', 'sqlab') . '</a>';
-echo '<div class="dropdown-menu" aria-labelledby="settingsDropdown">';
+// Botones de acciones del editor (Ejecutar y Evaluar)
+echo "
+<div class='code-editor-actions'>
+    <button id='executeSqlButton' type='button' class='btn btn-primary'>" . get_string('runcode', 'sqlab') . "</button>
+    <button id='evaluateSqlButton' type='button' class='btn btn-success'>" . get_string('evaluatecode', 'sqlab') . "</button>
+    <button id='infoButton' type='button' class='btn btn-secondary'><i class='fa fa-question'></i></button>
+    <div id='infoText'>" . get_string('beforefinish', 'sqlab') . "</div>
+</div>";
 
-echo '<div class="dropdown-item">';
-echo '<a class="dropdown-item" href="#">' . get_string('editorthemes', 'sqlab') . '</a>';
-echo '<select id="themeSelector" class="form-control" onmouseover="openSelect(this)" onmouseout="closeSelect(this)" onchange="changeEditorTheme(this.value)">';
-echo '<option value="" disabled selected>' . get_string('editorthemes', 'sqlab') . '</option>';
-foreach ($themes as $theme) {
-    echo '<option value="' . $theme . '">' . $theme . '</option>';
-}
-echo '</select>';
-
-echo '<script>
-    // Función para abrir el select al pasar el ratón
-    function openSelect(selectElement) {
-        selectElement.size = 5; // Número de opciones visibles al abrir
-    }
-
-    // Función para cerrar el select al quitar el ratón
-    function closeSelect(selectElement) {
-        selectElement.size = 1; // Restablecer a su tamaño original
-    }
-
-    // Función para cambiar el tema del editor
-    function changeEditorTheme(theme) {
-        console.log("Cambiando tema del editor a: " + theme);
-        // Lógica para cambiar el tema de CodeMirror o el editor que estés usando
-        var editor = document.querySelector(".CodeMirror");
-        if (editor) {
-            // Supón que tienes una lógica para aplicar el tema
-            editor.setOption("theme", theme);
-        }
-    }
-</script>';
-echo '</div>';
-
-echo '<div class="dropdown-item">';
-echo '<a class="dropdown-item" href="#">' . get_string('fontsize', 'sqlab') . '</a>';
-// Font size selector for CodeMirror.
-echo ' <select id="fontSizeSelector" onmouseover="openSelect(this)" onmouseout="closeSelect(this)" onchange="changeFontSize(this.value)">';
-echo ' <option value="" disabled selected>' . get_string('fontsize', 'sqlab') . '</option>';
-for ($i = 10; $i <= 30; $i += 2) {
-    echo ' <option value="' . $i . 'px">' . $i . '</option>';
-}
-echo ' </select>';
-echo '<script>
-    // Función para abrir el select al pasar el ratón
-    function openSelect(selectElement) {
-        selectElement.size = 5; // Número de opciones visibles al abrir
-    }
-
-    // Función para cerrar el select al quitar el ratón
-    function closeSelect(selectElement) {
-        selectElement.size = 1; // Restablecer a su tamaño original
-    }
-
-    // Función para cambiar el tema del editor
-    function changeFontSize(size) {
-    if (editor) {
-        editor.getWrapperElement().style.fontSize = size;
-        editor.refresh();
-        localStorage.setItem("editorFontSize", size); // Save the new font size to localStorage.
-    }
-}
-</script>';
-echo '</div>';
-
-
-echo '<div class="dropdown-item">';
-echo '<a class="dropdown-item" href="#">' . get_string('selectlanguage', 'sqlab') . '</a>';
-// Language selector to switch between available languages.
-$languages = get_string_manager()->get_list_of_translations();  // Obtiene los idiomas disponibles en Moodle
-echo ' <select id="language-selector" onmouseover="openSelect(this)" onmouseout="closeSelect(this)" onchange="changeLanguage()">';
-echo '<option value="" disabled selected>' . get_string('selectlanguage', 'sqlab') . '</option>';
-foreach ($languages as $langcode => $langname) {
-    echo '<option value="' . $langcode . '">' . $langname . '</option>';
-}
-echo ' </select>';
-echo '<script>
-    // Función para abrir el select al pasar el ratón
-    function openSelect(selectElement) {
-        selectElement.size = 3; // Número de opciones visibles al abrir
-    }
-
-    // Función para cerrar el select al quitar el ratón
-    function closeSelect(selectElement) {
-        selectElement.size = 1; // Restablecer a su tamaño original
-    }
-</script>';
-
-echo '</div>';
-
-echo '</div>';
-echo '</li>';
+// Div para mostrar los resultados de la ejecución de SQL
+echo "
+<div id='sqlQueryResults' class='sql-query-results'></div>
+";
 
 
-echo '<li class="nav-item">';
-echo '<a class="nav-link" href="#"><i class="fas fa-question-circle"></i> ' . get_string('navbar_help', 'sqlab') . '</a>';
-echo '</li>';
-
-
-    
-echo '</ul>';
-echo '</div>';
-echo '</nav>';
-echo '</div>';
-
-
-// CodeMirror editor.
-echo ' <textarea id="myCodeMirror" class="form-control" data-question-id="' . $question_id . '"></textarea>';
-
-echo ' </div>'; // Close code-editor-container div.
-echo ' </div>'; // Close ablock div.
-
-// Div for code editor actions.
-echo ' <div class="code-editor-actions">';
-echo ' <button id="executeSqlButton" type="button" class="btn btn-primary">' . get_string('runcode', 'sqlab') . '</button>';
-echo ' <button id="evaluateSqlButton" type="button" class="btn btn-success">' . get_string('evaluatecode', 'sqlab') . '</button>';
-echo ' <button id="infoButton" type="button" class="btn btn-secondary"><i class="fa fa-question"></i></button>';
-echo ' <div id="infoText">' . get_string('beforefinish', 'sqlab') . '</div>';
-echo ' </div>';
-
-// Div to display the results of code execution.
-echo ' <div id="sqlQueryResults" class="sql-query-results"></div>';
-
-echo ' </div>'; // Close formulation div.
-echo ' </div>'; // Close content div.
-echo ' </div>'; // Close main div (unique ID).
-
-// Navigation script and summary URL setup.
-$summaryUrl = new moodle_url('/mod/sqlab/summary.php', array('attempt' => $attemptid, 'cmid' => $cmid));
-$summaryUrlString = $summaryUrl->out(false);
-
-// Small script to add delay so that the data is loaded correctly into the database.
-echo '
-<script>
-function redirectToSummary() {
-    setTimeout(function() {
-        window.location.href = "' . $summaryUrlString . '";
-    }, 1500);
-}
-</script>';
-
-// Question navigation buttons.
-echo ' <div class="navigation-buttons">';
-if ($page > 0) {
-    echo ' <a href="?attempt=' . $attemptid . '&cmid=' . $cmid . '&page=' . ($page - 1) . '" class="mod_quiz-prev-nav btn btn-secondary">' . get_string('previouspage', 'sqlab') . '</a>';
-}
-if ($page < count($quiz_questions) - 1) {
-    echo ' <a href="?attempt=' . $attemptid . '&cmid=' . $cmid . '&page=' . ($page + 1) . '" class="mod_quiz-next-nav btn btn-primary">' . get_string('nextpage', 'sqlab') . '</a>';
-} else {
-    echo ' <button class="mod_quiz-next-nav btn btn-primary" onclick="redirectToSummary()">' . get_string('finishattempt', 'sqlab') . '</button>';
-}
-echo ' </div>';
-
-echo ' </div>'; // Close main content div.
-
-// Question navigation.
-echo '<div id="question-nav" class="question-navigation">';
-echo '<h5>' . get_string('questionnavtittle', 'sqlab') . '</h5>';
-echo '<div class="nav-links">';
-
-foreach ($quiz_questions as $index => $question) {
-    $isSelected = ($page == $index) ? 'font-weight: bold; background-color: #e7f1ff; border-left: 4px solid #007bff;' : 'border-left: 4px solid transparent;';
-    $questionPageUrl = new moodle_url('/mod/sqlab/attempt.php', array('attempt' => $attemptid, 'cmid' => $cmid, 'page' => $index));
-    echo '<a href="' . $questionPageUrl->out() . '" style="display: block; margin-bottom: 2.5px; padding: 8px 12px; ' . $isSelected . ' text-decoration: none; color: #333; border-radius: 4px; transition: background-color 0.3s;">' . get_string('question', 'sqlab') . ' ' . ($index + 1) . '</a>';
-}
-
-echo ' </div>'; // Close nav-links div.
-echo ' </div>'; // Close question-nav div.
-
-echo ' </div>'; // Close flex div.
-
-// Hidden divs for JS use.
+// Divs ocultos para uso en JS.
 echo " <div id='resultDataSql' style='display:none;'>" . htmlspecialchars($current_question['resultdata'], ENT_QUOTES, 'UTF-8') . "</div>";
 echo " <div id='resultDataUserId' style='display:none;'>" . $USER->id . "</div>";
 echo " <div id='resultDataSchema' style='display:none;'>" . htmlspecialchars(schema_manager::format_activity_name($sqlab->name), ENT_QUOTES, 'UTF-8') . "</div>";
@@ -485,7 +439,7 @@ echo ' <div id="attemptIdContainer" style="display:none;">' . json_encode($attem
 echo ' <div id="questionIdContainer" style="display:none;">' . json_encode($current_question['questionid']) . '</div>';
 echo ' <div id="cmidContainer" style="display:none;">' . json_encode($cmid) . '</div>';
 
-// JS scripts.
+// Scripts JS para funcionalidad adicional.
 echo '<script src="' . new moodle_url('/mod/sqlab/js/codemirror_config.js') . '"></script>';
 echo '<script src="' . new moodle_url('/mod/sqlab/js/localstorage.js') . '"></script>';
 echo '<script src="' . new moodle_url('/mod/sqlab/js/sql_executor.js') . '"></script>';
@@ -494,6 +448,6 @@ echo '<script src="' . new moodle_url('/mod/sqlab/js/grade_manager.js') . '"></s
 echo '<script src="' . new moodle_url('/mod/sqlab/js/context_resultdata_executor.js') . '"></script>';
 echo '<script src="' . new moodle_url('/mod/sqlab/js/info_button.js') . '"></script>';
 
-
-// Display the Moodle page footer.
+// Mostrar el pie de página de Moodle.
 echo $OUTPUT->footer();
+?>
