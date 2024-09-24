@@ -165,59 +165,90 @@ echo ' <div style="display: flex;">';
 
 // Crear barra de navegación vertical con íconos
 // Barra de navegación vertical con las mismas funciones que la barra horizontal
-echo '
-<div class="vertical-navbar" style="width: 50px; background-color: #f8f9fa; display: flex; flex-direction: column; align-items: center; padding: 10px 0;">
-    
-    <!-- Icono de herramientas (igual que el botón de herramientas de la barra horizontal) -->
-    <a href="#" style="margin: 20px 0;" onclick="openTools()"><i class="fas fa-tools"></i></a>
-    
-    <!-- Icono de snippets con menú desplegable -->
-    <a href="#" style="margin: 20px 0;" id="snippetsDropdownToggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-code"></i></a>
-    <div class="dropdown-menu" id="snippetsDropdownMenu" aria-labelledby="snippetsDropdownToggle">';
-    // Generar el menú de snippets
-    foreach ($snippets as $snippetName => $snippetCode) {
-        echo '<a class="dropdown-item" href="#" onclick="insertSnippet(event, `' . addslashes($snippetCode) . '`)">' . $snippetName . '</a>';
-    }
-echo '
-    </div>
-    
-    <!-- Icono de configuración (igual que el botón de configuración de la barra horizontal) -->
-    <a href="#" style="margin: 20px 0;" id="settingsDropdownToggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cog"></i></a>
-    <div class="dropdown-menu" id="settingsDropdownMenu" aria-labelledby="settingsDropdownToggle">
-        <!-- Selector de temas -->
-        <div class="dropdown-item">
-            <label>' . get_string('editorthemes', 'sqlab') . '</label>
-            <select id="themeSelector" class="form-control" onchange="changeEditorTheme(this.value)">';
-            foreach ($themes as $theme) {
-                echo '<option value="' . $theme . '">' . $theme . '</option>';
-            }
-echo '      </select>
-        </div>
-        <!-- Selector de tamaño de fuente -->
-        <div class="dropdown-item">
-            <label>' . get_string('fontsize', 'sqlab') . '</label>
-            <select id="fontSizeSelector" class="form-control" onchange="changeFontSize(this.value)">';
-            for ($i = 10; $i <= 30; $i += 2) {
-                echo '<option value="' . $i . 'px">' . $i . '</option>';
-            }
-echo '      </select>
-        </div>
-        <!-- Selector de idioma -->
-        <div class="dropdown-item">
-            <label>' . get_string('selectlanguage', 'sqlab') . '</label>
-            <select id="languageSelector" class="form-control" onchange="changeLanguage()">';
-            foreach ($languages as $langcode => $langname) {
-                echo '<option value="' . $langcode . '">' . $langname . '</option>';
-            }
-echo '      </select>
-        </div>
-    </div>
+echo "
+<div class='navbar-v-container' style='width: 50px; display: flex; flex-direction: column; align-items: center; padding: 10px 0;'>
+    <nav class='navbar navbar-expand-lg navbar-light bg-light'>
+         <div class='collapse navbar-collapse' id='navbarNav' >
+            <ul class='navbar-nav ml-auto' style='width: 50px; display: flex; flex-direction: column; align-items: center; padding: 10px 0;'>";
 
-    <!-- Icono de ayuda -->
-    <a href="#" style="margin: 20px 0;" onclick="openHelp()"><i class="fas fa-question-circle"></i></a>
-    
+            //Tools
+            echo "
+            <li class='nav-item'>
+            <a class='nav-link' href='#' style='margin-right: 15px;'><i class='fas fa-tools'></i> </a>
+            </li>";
+            
+            // Menú desplegable: Snippets
+            echo "
+            <li class='nav-item dropdown'>
+            <a class='nav-link dropdown-toggle' href='#' id='snippetsDropdown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
+                <i class='fas fa-code'></i>
+            </a>
+            <div class='dropdown-menu' aria-labelledby='snippetsDropdown'>";
+            // Recorrer los snippets y generar opciones en el menú desplegable
+            foreach ($snippets as $snippetName => $snippetCode) {
+                echo "<a class='dropdown-item' href='#' onclick='insertSnippet(event, `" . addslashes($snippetCode) . "`)'>" . $snippetName . "</a>";
+            }
+            echo "</div> </li>";
+
+            // Menú desplegable: Configuración (temas, tamaño de fuente, idioma)
+            echo "
+            <li class='nav-item dropdown'>
+                <a class='nav-link dropdown-toggle' href='#' id='settingsDropdown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
+                    <i class='fas fa-cog'></i> 
+                </a>
+                <div class='dropdown-menu' aria-labelledby='settingsDropdown'>
+                
+                    <!-- Selección de temas para el editor -->
+                    <div class='dropdown-item'>
+                        <a class='dropdown-item' href='#'>" . get_string('editorthemes', 'sqlab') . "</a>
+                        <select id='themeSelector' class='form-control' onmouseover='openSelect(this)' onmouseout='closeSelect(this)' onchange='changeEditorTheme(this.value)'>
+                            <option value='' disabled selected>" . get_string('editorthemes', 'sqlab') . "</option>";
+                            foreach ($themes as $theme) {
+                                echo "<option value='" . $theme . "'>" . $theme . "</option>";
+                            }
+            echo "
+                        </select>
+                    </div>
+
+                    <!-- Selector para cambiar el tamaño de fuente -->
+                    <div class='dropdown-item'>
+                        <a class='dropdown-item' href='#'>" . get_string('fontsize', 'sqlab') . "</a>
+                        <select id='fontSizeSelector' onmouseover='openSelect(this)' onmouseout='closeSelect(this)' onchange='changeFontSize(this.value)'>
+                            <option value='' disabled selected>" . get_string('fontsize', 'sqlab') . "</option>";
+                            for ($i = 10; $i <= 30; $i += 2) {
+                                echo "<option value='" . $i . "px'>" . $i . "</option>";
+                            }
+            echo "
+                        </select>
+                    </div>
+
+                    <!-- Selector de idioma -->
+                    <div class='dropdown-item'>
+                        <a class='dropdown-item' href='#'>" . get_string('selectlanguage', 'sqlab') . "</a>
+                        <select id='language-selector' onmouseover='openSelect(this)' onmouseout='closeSelect(this)' onchange='changeLanguage()'>
+                            <option value='' disabled selected>" . get_string('selectlanguage', 'sqlab') . "</option>";
+                            foreach ($languages as $langcode => $langname) {
+                                echo "<option value='" . $langcode . "'>" . $langname . "</option>";
+                            }
+            echo "
+                        </select>
+                    </div>
+                </div>
+            </li>";
+
+            // Elemento de ayuda en la barra de navegación
+            echo "
+            <li class='nav-item'>
+                <a class='nav-link' href='#' style='margin-right: 15px;'><i class='fas fa-question-circle'></i></a>
+            </li>";
+
+            echo "</ul>
+            </div>
+    </nav>
 </div>
+";
 
+echo'
 <!-- JavaScript Functions -->
 <script>
     // Función para abrir las herramientas
@@ -276,6 +307,8 @@ echo '      </select>
 </script>
 ';
 
+
+
 // Inicio del div de contenido principal.
 echo ' <div style="flex: 1; padding-left: 70px;">';
 
@@ -322,93 +355,7 @@ echo ' <div class="ablock">';
 echo ' <label for="myCodeMirror"></label>';
 echo ' <div class="code-editor-container">';
 
-// Barra de navegación para herramientas, snippets, configuración y ayuda.
-echo "
-<div class='navbar-container'>
-    <nav class='navbar navbar-expand-lg navbar-light bg-light'>
-        <div class='collapse navbar-collapse' id='navbarNav'>
-            <ul class='navbar-nav ml-auto'>";
 
-                // Elemento de la barra de navegación: Herramientas
-                echo "
-                <li class='nav-item'>
-                    <a class='nav-link' href='#'><i class='fas fa-tools'></i> " . get_string('navbarTools', 'sqlab') . "</a>
-                </li>";
-
-                // Menú desplegable: Snippets
-                echo "
-                <li class='nav-item dropdown'>
-                    <a class='nav-link dropdown-toggle' href='#' id='snippetsDropdown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
-                        <i class='fas fa-code'></i> " . get_string('navbar_snippets', 'sqlab') . "
-                    </a>
-                    <div class='dropdown-menu' aria-labelledby='snippetsDropdown'>";
-                    
-                    // Recorrer los snippets y generar opciones en el menú desplegable
-                    foreach ($snippets as $snippetName => $snippetCode) {
-                        echo "<a class='dropdown-item' href='#' onclick='insertSnippet(event, `" . addslashes($snippetCode) . "`)'>" . $snippetName . "</a>";
-                    }
-                    
-                echo "
-                    </div>
-                </li>";
-
-                // Menú desplegable: Configuración (temas, tamaño de fuente, idioma)
-                echo "
-                <li class='nav-item dropdown'>
-                    <a class='nav-link dropdown-toggle' href='#' id='settingsDropdown' role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>
-                        <i class='fas fa-cog'></i> " . get_string('navbar_conf', 'sqlab') . "
-                    </a>
-                    <div class='dropdown-menu' aria-labelledby='settingsDropdown'>
-                    
-                        <!-- Selección de temas para el editor -->
-                        <div class='dropdown-item'>
-                            <a class='dropdown-item' href='#'>" . get_string('editorthemes', 'sqlab') . "</a>
-                            <select id='themeSelector' class='form-control' onmouseover='openSelect(this)' onmouseout='closeSelect(this)' onchange='changeEditorTheme(this.value)'>
-                                <option value='' disabled selected>" . get_string('editorthemes', 'sqlab') . "</option>";
-                                foreach ($themes as $theme) {
-                                    echo "<option value='" . $theme . "'>" . $theme . "</option>";
-                                }
-                echo "
-                            </select>
-                        </div>
-
-                        <!-- Selector para cambiar el tamaño de fuente -->
-                        <div class='dropdown-item'>
-                            <a class='dropdown-item' href='#'>" . get_string('fontsize', 'sqlab') . "</a>
-                            <select id='fontSizeSelector' onmouseover='openSelect(this)' onmouseout='closeSelect(this)' onchange='changeFontSize(this.value)'>
-                                <option value='' disabled selected>" . get_string('fontsize', 'sqlab') . "</option>";
-                                for ($i = 10; $i <= 30; $i += 2) {
-                                    echo "<option value='" . $i . "px'>" . $i . "</option>";
-                                }
-                echo "
-                            </select>
-                        </div>
-
-                        <!-- Selector de idioma -->
-                        <div class='dropdown-item'>
-                            <a class='dropdown-item' href='#'>" . get_string('selectlanguage', 'sqlab') . "</a>
-                            <select id='language-selector' onmouseover='openSelect(this)' onmouseout='closeSelect(this)' onchange='changeLanguage()'>
-                                <option value='' disabled selected>" . get_string('selectlanguage', 'sqlab') . "</option>";
-                                foreach ($languages as $langcode => $langname) {
-                                    echo "<option value='" . $langcode . "'>" . $langname . "</option>";
-                                }
-                echo "
-                            </select>
-                        </div>
-                    </div>
-                </li>";
-
-                // Elemento de ayuda en la barra de navegación
-                echo "
-                <li class='nav-item'>
-                    <a class='nav-link' href='#'><i class='fas fa-question-circle'></i> " . get_string('navbar_help', 'sqlab') . "</a>
-                </li>";
-
-            echo "
-            </ul>
-        </div>
-    </nav>
-</div>";
 
 // Editor de CodeMirror
 echo "
