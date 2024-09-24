@@ -311,6 +311,7 @@ echo'
 // Inicio del contenedor principal
 echo '<link rel="stylesheet" type="text/css" href="styles/style.css">';
 echo '<div class="main-container">';
+
     
 // Subcontenedor izquierdo (donde puedes poner, por ejemplo, el editor de SQL)
 echo '<div class="left-container">';
@@ -321,6 +322,7 @@ echo "
     <textarea id='myCodeMirror' class='form-control' data-question-id='" . $question_id . "' style='width: 100%; height: 300px;'></textarea>
 </div>";
 
+// Botones de acciones del editor (Ejecutar y Evaluar)
 echo "
 <div class='code-editor-actions'>
     <button id='executeSqlButton' type='button' class='btn btn-primary'>" . get_string('runcode', 'sqlab') . "</button>
@@ -341,58 +343,70 @@ echo '<div class="separator"></div>';
 
 // Subcontenedor derecho (donde puedes mostrar los resultados o ayudas)
 echo '<div class="right-container">';
-echo '<h2>Pestañas de ayuda</h2>';
-echo format_text($current_question['statement'], FORMAT_MOODLE, $formatoptions);
 
-// Secciones de acordeón para resultados SQL, conceptos relacionados y sugerencias.
-echo ' <div class="accordion-container">';
-echo ' <h2 class="accordion-title">' . get_string('sqlresults', 'sqlab') . '</h2>';
-echo ' <div class="accordion-content">';
-echo " <div id='resultDataContainer' class='sql-query-results'></div>";
-echo ' </div>';
-echo ' </div>';
+// Crear las pestañas de navegación
+echo '
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link active" id="description-tab" data-toggle="tab" href="#description" role="tab" aria-controls="description" aria-selected="true">Descripción</a>
+  </li>
 
-$formatoptions->filter = true; // Activar filtros para esta sección.
-echo ' <div class="accordion-container">';
-echo ' <h2 class="accordion-title">' . get_string('relatedconcepts', 'sqlab') . '</h2>';
-echo ' <div class="accordion-content">' . format_text($current_question['relatedconcepts'], FORMAT_HTML, $formatoptions) . '</div>';
-echo ' </div>';
-$formatoptions->filter = false; // Restablecer el procesamiento de filtros para otras secciones.
+  <li class="nav-item">
+    <a class="nav-link" id="help-tab" data-toggle="tab" href="#help" role="tab" aria-controls="help" aria-selected="false">Ayuda</a>
+  </li>
+</ul>
+';
 
-echo ' <div class="accordion-container">';
-echo ' <h2 class="accordion-title">' . get_string('hints', 'sqlab') . '</h2>';
-echo ' <div class="accordion-content">' . format_text($current_question['code'], FORMAT_HTML, $formatoptions) . '</div>';
-echo ' </div>';
+// Crear el contenido de las pestañas
+echo '
+<div class="tab-content" id="myTabContent">
+  <!-- Contenido de la pestaña Descripción -->
+  <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+    ' . format_text($current_question['statement'], FORMAT_MOODLE, $formatoptions) . '
+  </div>
+  
+  <!-- Contenido de la pestaña Ayuda, que incluye los tres desplegables -->
+  <div class="tab-pane fade" id="help" role="tabpanel" aria-labelledby="help-tab">
+    <h3>Ayuda</h3>
+    <!-- Sección de Expected Results -->
+    <div class="accordion-container">
+      <h2 class="accordion-title">' . get_string('sqlresults', 'sqlab') . '</h2>
+      <div class="accordion-content">
+        <div id="resultDataContainer" class="sql-query-results"></div>
+      </div>
+    </div>
 
+    <!-- Sección de Related Concepts -->
+    <div class="accordion-container">
+      <h2 class="accordion-title">' . get_string('relatedconcepts', 'sqlab') . '</h2>
+      <div class="accordion-content">
+        ' . format_text($current_question['relatedconcepts'], FORMAT_HTML, $formatoptions) . '
+      </div>
+    </div>
+
+    <!-- Sección de Hints -->
+    <div class="accordion-container">
+      <h2 class="accordion-title">' . get_string('hints', 'sqlab') . '</h2>
+      <div class="accordion-content">
+        ' . format_text($current_question['code'], FORMAT_HTML, $formatoptions) . '
+      </div>
+    </div>
+  </div>
+</div>
+';
+
+// Separador
+echo '<div class="separator"></div>';
 
 echo '</div>';
+
 
 // Cerrar el contenedor principal
 echo '</div>';
 
 
 
-// // Inicio del div de contenido principal.
-// echo ' <div style="flex: 1; padding-left: 70px;">';
 
-// // Inicio del div para la pregunta principal con su ID único.
-// echo ' <div id="' . $question_id . '" class="que shortanswer deferredfeedback notyetanswered">';
-
-// // Sección de información de la pregunta (número y calificación).
-// echo ' <div class="info">';
-// echo ' <h3 class="no">' . get_string('question', 'sqlab') . ' <span class="qno">' . ($page + 1) . '</span></h3>'; // Mostrar el número de la pregunta.
-// echo ' <div class="grade">' . get_string('scoresas', 'sqlab') . ' ' . $formatted_grade . '</div>'; // Mostrar la calificación formateada.
-// echo ' </div>';
-
-// Inicio de la sección de contenido de la pregunta.
-
-
-
-
-
-
-
-// Botones de acciones del editor (Ejecutar y Evaluar)
 
 
 

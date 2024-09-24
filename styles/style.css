@@ -407,6 +407,7 @@ span.token.comment {
 
 /* Subcontenedor derecho */
 .right-container {
+  width: 100vh;
   flex: 1;
   padding: 20px;
   background-color: #ffffff;
