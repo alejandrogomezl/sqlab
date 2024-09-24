@@ -390,3 +390,32 @@ span.token.comment {
 /*Añadido nuevo*/
 
 /*Nav bar vertical*/
+/* Contenedor principal que contiene los dos subcontenedores */
+.main-container {
+  display: flex;
+  height: 100vh; /* Ajustar según el alto total que desees */
+}
+
+/* Subcontenedor izquierdo */
+.left-container {
+  flex: 1;
+  padding: 20px;
+  background-color: #f9f9f9;
+  margin-left: 30px;
+  overflow-y: auto; /* Añadir scroll si hay mucho contenido */
+}
+
+/* Subcontenedor derecho */
+.right-container {
+  flex: 1;
+  padding: 20px;
+  background-color: #ffffff;
+  overflow-y: auto; /* Añadir scroll si hay mucho contenido */
+}
+
+/* Separador entre los contenedores */
+.separator {
+  width: 2px;
+  background-color: #ddd;
+  margin: 0 10px; /* Espaciado entre el separador y los contenedores */
+}

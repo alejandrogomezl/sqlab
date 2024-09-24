@@ -308,26 +308,40 @@ echo'
 ';
 
 
+// Inicio del contenedor principal
+echo '<link rel="stylesheet" type="text/css" href="styles/style.css">';
+echo '<div class="main-container">';
+    
+// Subcontenedor izquierdo (donde puedes poner, por ejemplo, el editor de SQL)
+echo '<div class="left-container">';
+echo '<h2>Editor de SQL</h2>';
+// Editor de CodeMirror
+echo "
+<div class='code-editor-container'>
+    <textarea id='myCodeMirror' class='form-control' data-question-id='" . $question_id . "' style='width: 100%; height: 300px;'></textarea>
+</div>";
 
-// Inicio del div de contenido principal.
-echo ' <div style="flex: 1; padding-left: 70px;">';
+echo "
+<div class='code-editor-actions'>
+    <button id='executeSqlButton' type='button' class='btn btn-primary'>" . get_string('runcode', 'sqlab') . "</button>
+    <button id='evaluateSqlButton' type='button' class='btn btn-success'>" . get_string('evaluatecode', 'sqlab') . "</button>
+    <button id='infoButton' type='button' class='btn btn-secondary'><i class='fa fa-question'></i></button>
+    <div id='infoText'>" . get_string('beforefinish', 'sqlab') . "</div>
+</div>";
 
-// Inicio del div para la pregunta principal con su ID único.
-echo ' <div id="' . $question_id . '" class="que shortanswer deferredfeedback notyetanswered">';
 
-// Sección de información de la pregunta (número y calificación).
-echo ' <div class="info">';
-echo ' <h3 class="no">' . get_string('question', 'sqlab') . ' <span class="qno">' . ($page + 1) . '</span></h3>'; // Mostrar el número de la pregunta.
-echo ' <div class="grade">' . get_string('scoresas', 'sqlab') . ' ' . $formatted_grade . '</div>'; // Mostrar la calificación formateada.
-echo ' </div>';
+// Div para mostrar los resultados de la ejecución de SQL
+echo "
+<div id='sqlQueryResults' class='sql-query-results'></div>
+";
+echo '</div>';
 
-// Inicio de la sección de contenido de la pregunta.
-echo ' <div class="content">';
+// Separador
+echo '<div class="separator"></div>';
 
-// Inicio de la sección de formulación de la pregunta.
-echo ' <div class="formulation clearfix">';
-
-// Mostrar la declaración de la pregunta.
+// Subcontenedor derecho (donde puedes mostrar los resultados o ayudas)
+echo '<div class="right-container">';
+echo '<h2>Pestañas de ayuda</h2>';
 echo format_text($current_question['statement'], FORMAT_MOODLE, $formatoptions);
 
 // Secciones de acordeón para resultados SQL, conceptos relacionados y sugerencias.
@@ -350,32 +364,36 @@ echo ' <h2 class="accordion-title">' . get_string('hints', 'sqlab') . '</h2>';
 echo ' <div class="accordion-content">' . format_text($current_question['code'], FORMAT_HTML, $formatoptions) . '</div>';
 echo ' </div>';
 
-// Configuración del editor CodeMirror.
-echo ' <div class="ablock">';
-echo ' <label for="myCodeMirror"></label>';
-echo ' <div class="code-editor-container">';
+
+echo '</div>';
+
+// Cerrar el contenedor principal
+echo '</div>';
 
 
 
-// Editor de CodeMirror
-echo "
-<div class='code-editor-container'>
-    <textarea id='myCodeMirror' class='form-control' data-question-id='" . $question_id . "'></textarea>
-</div>";
+// // Inicio del div de contenido principal.
+// echo ' <div style="flex: 1; padding-left: 70px;">';
+
+// // Inicio del div para la pregunta principal con su ID único.
+// echo ' <div id="' . $question_id . '" class="que shortanswer deferredfeedback notyetanswered">';
+
+// // Sección de información de la pregunta (número y calificación).
+// echo ' <div class="info">';
+// echo ' <h3 class="no">' . get_string('question', 'sqlab') . ' <span class="qno">' . ($page + 1) . '</span></h3>'; // Mostrar el número de la pregunta.
+// echo ' <div class="grade">' . get_string('scoresas', 'sqlab') . ' ' . $formatted_grade . '</div>'; // Mostrar la calificación formateada.
+// echo ' </div>';
+
+// Inicio de la sección de contenido de la pregunta.
+
+
+
+
+
+
 
 // Botones de acciones del editor (Ejecutar y Evaluar)
-echo "
-<div class='code-editor-actions'>
-    <button id='executeSqlButton' type='button' class='btn btn-primary'>" . get_string('runcode', 'sqlab') . "</button>
-    <button id='evaluateSqlButton' type='button' class='btn btn-success'>" . get_string('evaluatecode', 'sqlab') . "</button>
-    <button id='infoButton' type='button' class='btn btn-secondary'><i class='fa fa-question'></i></button>
-    <div id='infoText'>" . get_string('beforefinish', 'sqlab') . "</div>
-</div>";
 
-// Div para mostrar los resultados de la ejecución de SQL
-echo "
-<div id='sqlQueryResults' class='sql-query-results'></div>
-";
 
 
 // Divs ocultos para uso en JS.
